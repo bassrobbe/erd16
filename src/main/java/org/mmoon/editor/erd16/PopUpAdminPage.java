@@ -12,7 +12,6 @@ import java.util.List;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
@@ -109,7 +108,7 @@ public class PopUpAdminPage extends Window implements PopupAdminPageInterface{
 	 */
 	final String category;
 	
-	public static final String MESSAGE_PATH = Configuration.message_path;
+	public static final String MESSAGE_PATH = Configuration.messages_path;
 	
 	/**
 	 * Creates a popup window with different working operation, depending on the category.

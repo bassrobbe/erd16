@@ -86,7 +86,7 @@ public class PopupReportButton extends Window implements PopupReportButtonInterf
 	 * @param value regarded value
 	 */
 	
-	public static final String MESSAGE_PATH = Configuration.message_path;
+	public static final String MESSAGE_PATH = Configuration.messages_path;
 	
 	public PopupReportButton (String subject, String property, String value){
 		//window caption

@@ -143,13 +143,11 @@ public class QueryDBSPARQL {
 	                
 	                //Lock writing session
 	                dataset.begin(ReadWrite.READ);
+	                //TODO: do not rely on specific file names here, use ontology IRI to file mappings read in the Configuration utility class and specify ontology IRIs instead
 	                morphemeDB.read(TTL_PATH+"/deu_inventory.ttl");
 	                morphemeDB.read(TTL_PATH+"/deu_schema.ttl");
 	                morphemeDB.read(TTL_PATH+"/mmoon.ttl");
-	//                morphemeDB.read("/media/Robert/Uni/Semester_4/SWT/Vorprojekt/workspace/vorprojekt/Resources/deu_inventory.ttl");
-	//                morphemeDB.read("/media/Robert/Uni/Semester_4/SWT/Vorprojekt/workspace/vorprojekt/Resources/deu_schema.ttl");
-	//                morphemeDB.read("/media/Robert/Uni/Semester_4/SWT/Vorprojekt/workspace/vorprojekt/Resources/mmoon.ttl");
-	                
+
 	                //Bugfix
 	                QueryDBSPARQL db = new QueryDBSPARQL();
 	                db.getAllTypes();

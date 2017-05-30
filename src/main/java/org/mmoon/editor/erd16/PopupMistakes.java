@@ -38,7 +38,7 @@ public class PopupMistakes extends Window implements PopupMistakesInterface{
 	 * index needed for correct file names
 	 */
 	int filenameIndex;
-	public static final String MESSAGE_PATH = Configuration.message_path;
+	public static final String MESSAGE_PATH = Configuration.messages_path;
 	/**
 	 * creates a popup window which shows the reported mistake
 	 * @param category current category

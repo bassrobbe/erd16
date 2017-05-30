@@ -1,21 +1,19 @@
 package org.mmoon.editor.erd16;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.Properties;
 
-import org.apache.james.mime4j.field.datetime.DateTime;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 import org.apache.shiro.config.Ini;
 import org.apache.shiro.web.env.IniWebEnvironment;
-
-import com.ibm.icu.text.DateFormat;
 
 /**
  * Loads configuration data and sets up the Shiro Web Environment based on
@@ -35,7 +33,7 @@ public class Configuration extends IniWebEnvironment {
 	/**
 	 * path to administrator messages directory
 	 */
-	public static String message_path;
+	public static String messages_path;
 
 	/**
 	 * path for scheduled backups
@@ -80,31 +78,32 @@ public class Configuration extends IniWebEnvironment {
 			e.printStackTrace();
 		}
 
-		String[] dirs = new String[5];
-		dirs[0] = basepath + "tdb/"; //tdb_path
-		dirs[1] = basepath + "ttl/"; //ttl_path
-		dirs[2] = basepath + "messages/"; //message_path
-		dirs[3] = basepath + "backup/"; //backup_path
-		dirs[4] = basepath + "shiro/"; //shiro_path
+		tdb_path = basepath + "tdb/";
+		ttl_path = basepath + "ttl/";
+		messages_path = basepath + "messages/";
+		backup_path = basepath + "backup/";
+		String shiro_path = basepath + "shiro/";
 
-		System.out.println("config: TDB_PATH = " + dirs[0]);
-		System.out.println("config: TTL_PATH = " + dirs[1]);
-		System.out.println("config: MESSAGES_PATH = " + dirs[2]);
-		System.out.println("config: BACKUP_PATH = " + dirs[3]);
-		System.out.println("config: SHIRO_PATH = " + dirs[4]);
+		System.out.println("config: TDB_PATH = " + tdb_path);
+		System.out.println("config: TTL_PATH = " + ttl_path);
+		System.out.println("config: MESSAGES_PATH = " + messages_path);
+		System.out.println("config: BACKUP_PATH = " + backup_path);
+		System.out.println("config: SHIRO_PATH = " + shiro_path);
 
-		for (String path: dirs) {
+		for (String path: ImmutableList.of(tdb_path, ttl_path, messages_path, backup_path, shiro_path)) {
 			File dir = new File(path);
 			if (!dir.exists()) {
 				dir.mkdirs();
 			}
 		}
 
+		//TODO: drop the following logic to copy files from a hard-coded sources in catalina.base
+		//TODO: instead, read a ontology IRI to Turtle file path mapping from a JSON file (names for example ont-sources.json)
+		//TODO: fail early if such JSON mapping file is not provided
 		String[] app_files = new String[4];
 		app_files[0] = "ttl/deu_inventory.ttl";
 		app_files[1] = "ttl/deu_schema.ttl";
 		app_files[2] = "ttl/mmoon.ttl";
-		app_files[3] = "shiro/shiro.ini";
 
 		try {
 			for (String file_name: app_files) {
@@ -113,29 +112,20 @@ public class Configuration extends IniWebEnvironment {
 					String cat_base = System.getProperty("catalina.base") + "/";
 					File source = new File(cat_base + "webapps/erd16-0.1/WEB-INF/classes/" + file_name);
 					File dest = file;
-					InputStream is = null;
-					OutputStream os = null;
-
-					is = new FileInputStream(source);
-					os = new FileOutputStream(dest);
-					byte[] buffer = new byte[1024];
-					int length;
-					while ((length = is.read(buffer)) > 0) {
-						os.write(buffer, 0, length);
+					try(InputStream is = new FileInputStream(source);
+						OutputStream os = new FileOutputStream(dest)) {
+						byte[] buffer = new byte[1024];
+						int length;
+						while ((length = is.read(buffer)) > 0) {
+							os.write(buffer, 0, length);
+						}
 					}
-					is.close();
-					os.close();
 				}
 
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		tdb_path = dirs[0];
-		ttl_path = dirs[1];
-		message_path = dirs[2];
-		backup_path = dirs[3];
 
 		// Initialize TDB if necessary
 		new Thread(new Runnable() {
@@ -165,8 +155,20 @@ public class Configuration extends IniWebEnvironment {
 
 		// create new Ini object from shiro.ini
 		Ini ini = new Ini();
-		ini.loadFromPath(basepath + "shiro/shiro.ini");
-		System.out.println("config: shiro.ini from " + basepath + "shiro.ini");
+		Path shiroIniPath = Paths.get(basepath + "shiro/shiro.ini");
+		if(!Files.isRegularFile(shiroIniPath)) {
+			URL shiroClassPathURL = Resources.getResource("shiro/shiro.ini");
+
+			try {
+				byte[] bytes = Resources.toByteArray(shiroClassPathURL);
+				Files.write(shiroIniPath, bytes);
+			} catch (IOException ioe) {
+				throw new RuntimeException("error reading shiro config from classpath", ioe);
+			}
+		}
+
+		ini.loadFromPath(shiroIniPath.toString());
+		System.out.println("config: shiro.ini from " + shiroIniPath);
 		this.setIni(ini);
 	}
 }

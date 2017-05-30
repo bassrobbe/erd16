@@ -130,7 +130,7 @@ public class AdminPageNew extends CustomComponent
 	 */
 	IndexedContainer uneditSuggestionFiles;
 
-	public static final String MESSAGE_PATH = Configuration.message_path;
+	public static final String MESSAGE_PATH = Configuration.messages_path;
 
 	/**
 	 * creates an admin page with various operations for the admin to choose
