@@ -68,7 +68,7 @@ public class LogInHeader extends CustomComponent implements LogInHeaderInterface
 
 	/**
 	 * Set up the default component layout and update depending on user role
-	 * 
+	 *
 	 * @param page
 	 *            the current view either searchUI or adminUI
 	 */
@@ -164,7 +164,7 @@ public class LogInHeader extends CustomComponent implements LogInHeaderInterface
 			}
 			// Logout button click
 			if (ok.getCaption().compareTo("LogOut") == 0) {
-				Page.getCurrent().open("/erd16Bitbucket/logout", "");
+				Page.getCurrent().open("/erd16-0.1/logout", "");
 				return;
 			}
 		}
@@ -174,7 +174,7 @@ public class LogInHeader extends CustomComponent implements LogInHeaderInterface
 				if (SecurityUtils.getSubject().isAuthenticated()) {
 					if (SecurityUtils.getSubject().hasRole("admin")) {
 						// pass current SearchUI state in URI fragment
-						this.getUI().getPage().open("/erd16Bitbucket/admin#" + Page.getCurrent().getUriFragment(), "");
+						this.getUI().getPage().open("/erd16-0.1/admin#" + Page.getCurrent().getUriFragment(), "");
 					} else {
 						Notification.show("Access denied", "Log in as administrator to perform this action",
 								Notification.Type.WARNING_MESSAGE);
@@ -187,7 +187,7 @@ public class LogInHeader extends CustomComponent implements LogInHeaderInterface
 			// Search Page button click
 			if (toAdmin.getCaption().compareTo("Search Page") == 0) {
 				// go back to last SearchUI state encoded in URI fragment
-				this.getUI().getPage().open("/erd16Bitbucket/#" + Page.getCurrent().getUriFragment(), "");
+				this.getUI().getPage().open("/erd16-0.1/#" + Page.getCurrent().getUriFragment(), "");
 			}
 		}
 	}
@@ -203,7 +203,7 @@ public class LogInHeader extends CustomComponent implements LogInHeaderInterface
 			logInLabel.setValue("logged in as: " + SecurityUtils.getSubject().getPrincipal().toString());
 			ok.setCaption("LogOut");
 			ok.setDescription("Logout of the current session.");
-			
+
 		} else {
 			user.setVisible(true);
 			pass.setVisible(true);

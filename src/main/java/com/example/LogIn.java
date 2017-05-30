@@ -30,7 +30,7 @@ import com.vaadin.ui.VerticalLayout;
  * Login Page to authenticate subject for admin page access
  */
 @SuppressWarnings("serial")
-public class LogIn extends CustomComponent implements LogInInterface, 
+public class LogIn extends CustomComponent implements LogInInterface,
 													  ClickListener {
 
 	/**
@@ -51,7 +51,7 @@ public class LogIn extends CustomComponent implements LogInInterface,
 	/**
 	 * continue without logIn
 	 */
-	private Link guest = new Link("continue as guest", new ExternalResource("/erd16Bitbucket/"));
+	private Link guest = new Link("continue as guest", new ExternalResource("/erd16-0.1/"));
 
 	private VerticalLayout content = new VerticalLayout();
 
@@ -106,7 +106,7 @@ public class LogIn extends CustomComponent implements LogInInterface,
 			try {
 				// authenticate current subject with token
 				currentUser.login(token);
-				Page.getCurrent().open("/erd16Bitbucket/admin", "");
+				Page.getCurrent().open("/erd16-0.1/admin", "");
 			} catch (UnknownAccountException uae) {
 				Notification.show("Log In Failure", "user name and/or password incorrect",
 						Notification.Type.WARNING_MESSAGE);
