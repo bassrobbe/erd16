@@ -6,7 +6,7 @@
 	      version="3.0">
 	<context-param>
 	    <param-name>shiroEnvironmentClass</param-name>
-	    <param-value>com.example.vorprojekt.Configuration</param-value>
+	    <param-value>org.mmoon.editor.erd16.Configuration</param-value>
 	</context-param>
 
 	<listener>
@@ -18,7 +18,7 @@
 		<servlet-class>com.vaadin.server.VaadinServlet</servlet-class>
 		<init-param>
 			<param-name>UI</param-name>
-			<param-value>com.example.vorprojekt.SearchUI</param-value>
+			<param-value>org.mmoon.editor.erd16.SearchUI</param-value>
 		</init-param>
 	</servlet>
 	
@@ -32,7 +32,7 @@
 		<servlet-class>com.vaadin.server.VaadinServlet</servlet-class>
 		<init-param>
 			<param-name>UI</param-name>
-			<param-value>com.example.vorprojekt.SearchUIAdminPageNew</param-value>
+			<param-value>org.mmoon.editor.erd16.SearchUIAdminPageNew</param-value>
 		</init-param>
 	</servlet>
 	
@@ -46,7 +46,7 @@
 		<servlet-class>com.vaadin.server.VaadinServlet</servlet-class>
 		<init-param>
 			<param-name>UI</param-name>
-			<param-value>com.example.vorprojekt.LogInUI</param-value>
+			<param-value>org.mmoon.editor.erd16.LogInUI</param-value>
 		</init-param>
 	</servlet>
 	
@@ -60,7 +60,7 @@
 		<servlet-class>com.vaadin.server.VaadinServlet</servlet-class>
 		<init-param>
 			<param-name>UI</param-name>
-			<param-value>com.example.vorprojekt.LogOut</param-value>
+			<param-value>org.mmoon.editor.erd16.LogOut</param-value>
 		</init-param>
 	</servlet>
 	
@@ -71,7 +71,7 @@
 	
 	<!--servlet>
 		<servlet-name>Conf</servlet-name>
-		<servlet-class>com.example.vorprojekt.Configuration</servlet-class>
+		<servlet-clorg.mmoon.editor.erd16.Configurationtion</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet-->
 	
