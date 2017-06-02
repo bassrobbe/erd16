@@ -9,9 +9,12 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.apache.shiro.config.Ini;
 import org.apache.shiro.web.env.IniWebEnvironment;
 
@@ -61,6 +64,11 @@ public class Configuration extends IniWebEnvironment {
 	private Properties config = new Properties();
 
 	/**
+	 * contains the absolute paths to all turtle source files
+	 */
+	public static Map<String, String> ont_sources;
+
+	/**
 	 * load the configuration data and shiro.ini file
 	 */
 	public Configuration() {
@@ -97,35 +105,42 @@ public class Configuration extends IniWebEnvironment {
 			}
 		}
 
-		//TODO: drop the following logic to copy files from a hard-coded sources in catalina.base
-		//TODO: instead, read a ontology IRI to Turtle file path mapping from a JSON file (names for example ont-sources.json)
-		//TODO: fail early if such JSON mapping file is not provided
-		String[] app_files = new String[4];
-		app_files[0] = "ttl/deu_inventory.ttl";
-		app_files[1] = "ttl/deu_schema.ttl";
-		app_files[2] = "ttl/mmoon.ttl";
-
+		String json = "";
 		try {
-			for (String file_name: app_files) {
-				File file = new File(basepath + file_name);
-				if (!file.exists()) {
-					String cat_base = System.getProperty("catalina.base") + "/";
-					File source = new File(cat_base + "webapps/erd16-0.1/WEB-INF/classes/" + file_name);
-					File dest = file;
-					try(InputStream is = new FileInputStream(source);
-						OutputStream os = new FileOutputStream(dest)) {
-						byte[] buffer = new byte[1024];
-						int length;
-						while ((length = is.read(buffer)) > 0) {
-							os.write(buffer, 0, length);
-						}
-					}
-				}
-
-			}
+			json = com.google.common.io.Files.toString(new File(basepath + "ont-sources.json"), java.nio.charset.StandardCharsets.UTF_8);
 		} catch (Exception e) {
 			e.printStackTrace();
+		//	new Notification("Warning", "No ontology source file \"ont-sources.json found, using default preferences instead.",
+		//		Notification.Type.WARNING_MESSAGE, true).show(Page.getCurrent());
+			json = "{\n" +
+  			"\t\"http://mmoon.org/core/\": \"http://mmoon.org/core.ttl\",\n" +
+  			"\t\"http://mmoon.org/deu/schema/og/\": \"http://mmoon.org/deu/schema/og.ttl\",\n" +
+  			"\t\"http://mmoon.org/deu/inventory/og/\": \"http://mmoon.org/deu/inventory/og.ttl\"\n" +
+				"}";
+			File file = new File(basepath + "ont-sources.json");
+			try {
+				com.google.common.io.Files.write(json, file, java.nio.charset.StandardCharsets.UTF_8);
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
 		}
+		Gson gson = new Gson();
+		Map<String, String> ont_sources_local = gson.fromJson(json, new TypeToken<Map<String, String>>(){}.getType());
+		for (Map.Entry<String, String> entry : ont_sources_local.entrySet()) {
+			try {
+				URL url = new URL(entry.getValue());
+				String new_value = basepath + "ttl" + url.getPath();
+				File dest = new File(new_value);
+				if (!dest.exists()) {
+					new File(dest.getParent()).mkdirs();
+					Resources.asByteSource(url).copyTo(com.google.common.io.Files.asByteSink(dest));
+				}
+				entry.setValue(new_value);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		ont_sources = ont_sources_local;
 
 		// Initialize TDB if necessary
 		new Thread(new Runnable() {
