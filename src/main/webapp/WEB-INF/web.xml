@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="http://java.sun.com/xml/ns/javaee"
 	      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	      xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
+	      xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
 	      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 	      version="3.0">
+	<context-param>
+  		<description>Vaadin production mode</description>
+  		<param-name>productionMode</param-name>
+  		<param-value>true</param-value>
+	</context-param>
 	<context-param>
 	    <param-name>shiroEnvironmentClass</param-name>
 	    <param-value>org.mmoon.editor.erd16.Configuration</param-value>
@@ -21,7 +26,7 @@
 			<param-value>org.mmoon.editor.erd16.SearchUI</param-value>
 		</init-param>
 	</servlet>
-	
+
 	<servlet-mapping>
 		<servlet-name>SearchUI</servlet-name>
 		<url-pattern>/*</url-pattern>
@@ -35,11 +40,11 @@
 			<param-value>org.mmoon.editor.erd16.SearchUIAdminPageNew</param-value>
 		</init-param>
 	</servlet>
-	
+
 	<servlet-mapping>
 		<servlet-name>SearchUIAdminPageNew</servlet-name>
 		<url-pattern>/admin/*</url-pattern>
-	</servlet-mapping>	
+	</servlet-mapping>
 
 	<servlet>
 		<servlet-name>LogInUI</servlet-name>
@@ -49,7 +54,7 @@
 			<param-value>org.mmoon.editor.erd16.LogInUI</param-value>
 		</init-param>
 	</servlet>
-	
+
 	<servlet-mapping>
 		<servlet-name>LogInUI</servlet-name>
 		<url-pattern>/login.jsp/*</url-pattern>
@@ -63,18 +68,18 @@
 			<param-value>org.mmoon.editor.erd16.LogOut</param-value>
 		</init-param>
 	</servlet>
-	
+
 	<servlet-mapping>
 		<servlet-name>LogOut</servlet-name>
 		<url-pattern>/logout/*</url-pattern>
 	</servlet-mapping>
-	
+
 	<!--servlet>
 		<servlet-name>Conf</servlet-name>
 		<servlet-clorg.mmoon.editor.erd16.Configurationtion</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet-->
-	
+
 	<filter>
 	    <filter-name>ShiroFilter</filter-name>
 	    <filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
@@ -87,6 +92,6 @@
 	    <dispatcher>FORWARD</dispatcher>
 	    <dispatcher>INCLUDE</dispatcher>
 	    <dispatcher>ERROR</dispatcher>
-	</filter-mapping>	
- 
+	</filter-mapping>
+
 </web-app>
