@@ -28,37 +28,37 @@ public class SearchUI extends UI {
 
 	public static class Servlet extends VaadinServlet {
 	}
-	
+
 	/**
 	 * databaste model
 	 */
 	private QueryDBSPARQL model;
-	
+
 	/**
 	 * Detail component in UI
 	 */
 	private Detail detail;
-	
+
 	/**
 	 * Overview component in UI
 	 */
 	private Overview overview;
-	
+
 	/**
 	 * Search field in UI
 	 */
 	private SearchField searchField;
-	
+
 	/**
 	 * Login fields in UI
 	 */
 	private LogInHeader header;
-	
+
 	/**
 	 * Presenter who implements communication
 	 */
 	private SearchPresenter searchPresenter;
-	
+
 	/**
 	 * Initialization method. Instantiates the model and all components of the view
 	 * and binds them together through the presenter. Defines the layout of the
@@ -66,7 +66,7 @@ public class SearchUI extends UI {
 	 */
 	@Override
 	protected void init(VaadinRequest request) {
-		
+
 	    // Create the model and the Vaadin view implementation
 	    model = new QueryDBSPARQL();
 	    detail = new Detail();
@@ -91,9 +91,9 @@ public class SearchUI extends UI {
     	    content.addComponent(searchField,0,0,0,0);
     	    content.addComponent(overview, 0, 2, 0, 2);
     	    content.addComponent(detail, 2, 2, 2, 2);
-    	    
+
     	    content.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-    	    
+
     	    content.setRowExpandRatio(0, 1);
     	    content.setRowExpandRatio(1, 1);
     	    content.setRowExpandRatio(2, 8);
@@ -105,14 +105,21 @@ public class SearchUI extends UI {
     	    	new UriFragmentChangedListener() {
 					@Override
 					public void uriFragmentChanged(UriFragmentChangedEvent event) {
-						load(event.getUriFragment());	
+						load(event.getUriFragment());
 					}
     	    	}
     	    );
-    	    
+
     	    load(getPage().getUriFragment());
+
+					if (!Configuration.json_found) {
+						Notification.show("Warning",
+						"No ontology source file \"ont-sources.json\" found, using default preferences instead.",
+						Notification.Type.WARNING_MESSAGE);
+						Configuration.json_found = true;
+					}
 	}
-	
+
 	private void load(String uriFragment) {
 		if (uriFragment!=null) {
 			String overview;
@@ -133,7 +140,7 @@ public class SearchUI extends UI {
 					searchPresenter.showAll();
 				} else {
 					searchPresenter.search(overview);
-				} 
+				}
 			}
 			if (select!=null) {
 				searchPresenter.entrySelect(select);
@@ -142,7 +149,7 @@ public class SearchUI extends UI {
 			searchPresenter.detailUpdateColumns();
 		}
 	}
-	
+
 	/**
 	 * Get method for model
 	 * @return database
@@ -150,7 +157,7 @@ public class SearchUI extends UI {
 	public QueryDBSPARQL getModel(){
 	    return this.model;
 	}
-	
+
 	/**
 	 * get detail component
 	 * @return detail component
@@ -158,7 +165,7 @@ public class SearchUI extends UI {
 	public Detail getDetail(){
 	    return this.detail;
 	}
-	
+
 	/**
 	 * get overview component
 	 * @return overview component
@@ -166,7 +173,7 @@ public class SearchUI extends UI {
 	public Overview getOverview(){
 	    return this.overview;
 	}
-	
+
 	/**
 	 * get search field component
 	 * @return search field component
@@ -174,7 +181,7 @@ public class SearchUI extends UI {
 	public SearchField getSearchField(){
 	    return this.searchField;
 	}
-	
+
 	/**
 	 * get login header
 	 * @ return login header component
@@ -182,7 +189,7 @@ public class SearchUI extends UI {
 	public LogInHeader getLogInHeader(){
 	    return this.header;
 	}
-	
+
 	/**
 	 * get search presenter
 	 * @return search presenter
