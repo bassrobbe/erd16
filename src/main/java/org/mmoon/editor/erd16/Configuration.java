@@ -2,21 +2,19 @@ package org.mmoon.editor.erd16;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Date;
-import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
+import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.apache.shiro.config.Ini;
 import org.apache.shiro.web.env.IniWebEnvironment;
+import com.vaadin.ui.Notification;
 
 /**
  * Loads configuration data and sets up the Shiro Web Environment based on
@@ -46,7 +44,7 @@ public class Configuration extends IniWebEnvironment {
 	/**
 	 * time interval for backups
 	 */
-	public static long backup_interval;
+	public static long backup_interval = 10800000;
 
 	/**
 	 * the root directory of the tomcat server instance
@@ -59,23 +57,18 @@ public class Configuration extends IniWebEnvironment {
 	private FileInputStream configReader;
 
 	/**
-	 * Properties Object to store the configurations
-	 */
-	private Properties config = new Properties();
-
-	/**
 	 * contains the absolute paths to all turtle source files
 	 */
 	public static Map<String, String> ont_sources;
+
+	public static boolean json_found = true;
 
 	/**
 	 * load the configuration data and shiro.ini file
 	 */
 	public Configuration() {
-		backup_interval = 10800000;
-
+		// set basepath
 		basepath = "";
-		// load configuration data
 		try {
 			if (System.getProperty("erd16.appdata.basedir") == null) {
 				basepath = System.getProperty("user.home") + "/.erd16/";
@@ -86,32 +79,25 @@ public class Configuration extends IniWebEnvironment {
 			e.printStackTrace();
 		}
 
+		//set path variables and create directories
 		tdb_path = basepath + "tdb/";
 		ttl_path = basepath + "ttl/";
 		messages_path = basepath + "messages/";
 		backup_path = basepath + "backup/";
-		String shiro_path = basepath + "shiro/";
-
-		System.out.println("config: TDB_PATH = " + tdb_path);
-		System.out.println("config: TTL_PATH = " + ttl_path);
-		System.out.println("config: MESSAGES_PATH = " + messages_path);
-		System.out.println("config: BACKUP_PATH = " + backup_path);
-		System.out.println("config: SHIRO_PATH = " + shiro_path);
-
-		for (String path: ImmutableList.of(tdb_path, ttl_path, messages_path, backup_path, shiro_path)) {
+		for (String path: ImmutableList.of(tdb_path, ttl_path, messages_path, backup_path)) {
 			File dir = new File(path);
 			if (!dir.exists()) {
 				dir.mkdirs();
 			}
 		}
 
+		//copy ontology source files to application data directory
 		String json = "";
 		try {
-			json = com.google.common.io.Files.toString(new File(basepath + "ont-sources.json"), java.nio.charset.StandardCharsets.UTF_8);
+			json = Files.toString(new File(basepath + "ont-sources.json"), java.nio.charset.StandardCharsets.UTF_8);
 		} catch (Exception e) {
 			e.printStackTrace();
-		//	new Notification("Warning", "No ontology source file \"ont-sources.json found, using default preferences instead.",
-		//		Notification.Type.WARNING_MESSAGE, true).show(Page.getCurrent());
+			json_found = false;
 			json = "{\n" +
   			"\t\"http://mmoon.org/core/\": \"http://mmoon.org/core.ttl\",\n" +
   			"\t\"http://mmoon.org/deu/schema/og/\": \"http://mmoon.org/deu/schema/og.ttl\",\n" +
@@ -119,47 +105,45 @@ public class Configuration extends IniWebEnvironment {
 				"}";
 			File file = new File(basepath + "ont-sources.json");
 			try {
-				com.google.common.io.Files.write(json, file, java.nio.charset.StandardCharsets.UTF_8);
+				Files.write(json, file, java.nio.charset.StandardCharsets.UTF_8);
 			} catch (IOException ioe) {
 				ioe.printStackTrace();
 			}
 		}
 		Gson gson = new Gson();
-		Map<String, String> ont_sources_local = gson.fromJson(json, new TypeToken<Map<String, String>>(){}.getType());
-		for (Map.Entry<String, String> entry : ont_sources_local.entrySet()) {
+		ont_sources = gson.fromJson(json, new TypeToken<Map<String, String>>(){}.getType());
+		for (Map.Entry<String, String> entry : ont_sources.entrySet()) {
 			try {
 				URL url = new URL(entry.getValue());
 				String new_value = basepath + "ttl" + url.getPath();
 				File dest = new File(new_value);
 				if (!dest.exists()) {
 					new File(dest.getParent()).mkdirs();
-					Resources.asByteSource(url).copyTo(com.google.common.io.Files.asByteSink(dest));
+					Resources.asByteSource(url).copyTo(Files.asByteSink(dest));
 				}
 				entry.setValue(new_value);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-		ont_sources = ont_sources_local;
-
-		// Initialize TDB if necessary
+		//System.out.println(ont_sources);
+		//initialize TDB if necessary
 		new Thread(new Runnable() {
-
 			@Override
 			public void run() {
 				QueryDBSPARQL.initializeTDB();
 			}
 		}).start();
 
-		// Start background thread for scheduled backups
+		//start background thread for scheduled backups
 		Timer timer = new Timer(true);
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
 				try {
 					QueryDBSPARQL db = new QueryDBSPARQL();
-					String fileName = "backup-"+new Date().getTime()+".ttl";
-					File file = new File(backup_path+fileName);
+					String fileName = "backup-" + new Date().getTime() + ".ttl";
+					File file = new File(backup_path + fileName);
 					file.createNewFile();
 					db.convertDatabaseToTurtleFile(backup_path+fileName);
 				} catch (Exception e) {
@@ -168,22 +152,20 @@ public class Configuration extends IniWebEnvironment {
 			}
 		}, 60000, backup_interval);
 
-		// create new Ini object from shiro.ini
-		Ini ini = new Ini();
-		Path shiroIniPath = Paths.get(basepath + "shiro/shiro.ini");
-		if(!Files.isRegularFile(shiroIniPath)) {
-			URL shiroClassPathURL = Resources.getResource("shiro/shiro.ini");
-
+		//copy default shiro.ini file to application data directory and load
+		String cat_base = System.getProperty("catalina.base") + "/";
+		File dest = new File(basepath + "shiro/shiro.ini");
+		if (!dest.exists()) {
+			new File(dest.getParent()).mkdirs();
 			try {
-				byte[] bytes = Resources.toByteArray(shiroClassPathURL);
-				Files.write(shiroIniPath, bytes);
-			} catch (IOException ioe) {
-				throw new RuntimeException("error reading shiro config from classpath", ioe);
+				Files.asByteSource(new File(cat_base + "webapps/erd16-0.1/WEB-INF/classes/shiro/shiro.ini"))
+					.copyTo(Files.asByteSink(dest));
+			} catch (IOException e) {
+					e.printStackTrace();
 			}
 		}
-
-		ini.loadFromPath(shiroIniPath.toString());
-		System.out.println("config: shiro.ini from " + shiroIniPath);
+		Ini ini = new Ini();
+		ini.loadFromPath(basepath + "shiro/shiro.ini");
 		this.setIni(ini);
 	}
 }

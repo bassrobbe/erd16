@@ -103,9 +103,7 @@ public class QueryDBSPARQL {
 
         public static final String TDB_PATH = Configuration.tdb_path;
 
-        //public static final String TTL_PATH = Configuration.ttl_path;
-
-        public static final Map<String, String> ONT_Sources = Configuration.ont_sources;
+        public static final Map<String, String> ONT_SOURCES = Configuration.ont_sources;
 
 
         /**
@@ -128,7 +126,7 @@ public class QueryDBSPARQL {
          * Run this method before first use for initializing the TDB directory with the
          * necessary folders and binaries. Important: Use only once
          */
-        public static void initializeTDB(){
+        public static void initializeTDB() {
         		boolean tdbEmpty = TDBFactory.inUseLocation(TDB_PATH);
         		if (!tdbEmpty) {
 	        		System.out.println("config: start initalizing TDB at "+TDB_PATH);
@@ -145,12 +143,10 @@ public class QueryDBSPARQL {
 
 	                //Lock writing session
 	                dataset.begin(ReadWrite.READ);
-	                //TODO: do not rely on specific file names here, use ontology IRI to file mappings read in the Configuration utility class and specify ontology IRIs instead
-	                //morphemeDB.read(TTL_PATH+"/deu_inventory.ttl");
-	                //morphemeDB.read(TTL_PATH+"/deu_schema.ttl");
-	                //morphemeDB.read(TTL_PATH+"/mmoon.ttl");
 
-                  for (String file : ONT_Sources.values()) {
+                  //read ontology source files
+                  for (String file : ONT_SOURCES.values()) {
+                    System.out.println(file);
                     morphemeDB.read(file);
                   }
 
