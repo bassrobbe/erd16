@@ -67,57 +67,50 @@ public class SearchUI extends UI {
 	@Override
 	protected void init(VaadinRequest request) {
 
-	    // Create the model and the Vaadin view implementation
-	    model = new QueryDBSPARQL();
-	    detail = new Detail();
-	    overview = new Overview();
-	    searchField = new SearchField();
-	    header = new LogInHeader("searchUI");
+		// Create the model and the Vaadin view implementation
+		model = new QueryDBSPARQL();
+		detail = new Detail();
+		overview = new Overview();
+		searchField = new SearchField();
+		header = new LogInHeader("searchUI");
 
-    	    // The presenter binds the model and view together
-    	    searchPresenter = new SearchPresenter(this, model, detail, overview, searchField, header);
+		// The presenter binds the model and view together
+		searchPresenter = new SearchPresenter(this, model, detail, overview, searchField, header);
 
-    	    VerticalLayout wrapper = new VerticalLayout();
-    	    GridLayout content = new GridLayout(3,3);
+		VerticalLayout wrapper = new VerticalLayout();
+		GridLayout content = new GridLayout(3, 3);
 
-    	    content.setHeight("95%");
-    	    content.setWidth("95%");
-    	    wrapper.setSizeFull();
-    	    wrapper.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-    	    wrapper.addComponent(content);
-    	    setContent(wrapper);
+		content.setHeight("95%");
+		content.setWidth("95%");
+		wrapper.setSizeFull();
+		wrapper.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		wrapper.addComponent(content);
+		setContent(wrapper);
 
-    	    content.addComponent(header, 1, 0, 2, 0);
-    	    content.addComponent(searchField,0,0,0,0);
-    	    content.addComponent(overview, 0, 2, 0, 2);
-    	    content.addComponent(detail, 2, 2, 2, 2);
+		content.addComponent(header, 1, 0, 2, 0);
+		content.addComponent(searchField, 0, 0, 0, 0);
+		content.addComponent(overview, 0, 2, 0, 2);
+		content.addComponent(detail, 2, 2, 2, 2);
 
-    	    content.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+		content.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
 
-    	    content.setRowExpandRatio(0, 1);
-    	    content.setRowExpandRatio(1, 1);
-    	    content.setRowExpandRatio(2, 8);
-    	    content.setColumnExpandRatio(0, 37.5f);
-    	    content.setColumnExpandRatio(1, 5);
-    	    content.setColumnExpandRatio(2, 57.5f);
+		content.setRowExpandRatio(0, 1);
+		content.setRowExpandRatio(1, 1);
+		content.setRowExpandRatio(2, 8);
+		content.setColumnExpandRatio(0, 37.5f);
+		content.setColumnExpandRatio(1, 5);
+		content.setColumnExpandRatio(2, 57.5f);
 
-    	    getPage().addUriFragmentChangedListener(
-    	    	new UriFragmentChangedListener() {
+		getPage().addUriFragmentChangedListener(
+				new UriFragmentChangedListener() {
 					@Override
 					public void uriFragmentChanged(UriFragmentChangedEvent event) {
 						load(event.getUriFragment());
 					}
-    	    	}
-    	    );
+				}
+		);
 
-    	    load(getPage().getUriFragment());
-
-					if (!Configuration.json_found) {
-						Notification.show("Warning",
-						"No ontology source file \"ont-sources.json\" found, using default preferences instead.",
-						Notification.Type.WARNING_MESSAGE);
-						Configuration.json_found = true;
-					}
+		load(getPage().getUriFragment());
 	}
 
 	private void load(String uriFragment) {

@@ -8,13 +8,16 @@ import java.util.TimerTask;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.CharSource;
 import com.google.common.io.Resources;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import org.apache.commons.codec.Charsets;
 import org.apache.shiro.config.Ini;
 import org.apache.shiro.web.env.IniWebEnvironment;
-import com.vaadin.ui.Notification;
 
 /**
  * Loads configuration data and sets up the Shiro Web Environment based on
@@ -49,7 +52,7 @@ public class Configuration extends IniWebEnvironment {
 	/**
 	 * the root directory of the tomcat server instance
 	 */
-	private String basepath;
+	private String addDatapath;
 
 	/**
 	 * FileInputStream to read config.properties
@@ -61,61 +64,75 @@ public class Configuration extends IniWebEnvironment {
 	 */
 	public static Map<String, String> ont_sources;
 
-	public static boolean json_found = true;
-
 	/**
 	 * load the configuration data and shiro.ini file
 	 */
 	public Configuration() {
-		// set basepath
-		basepath = "";
+		addDatapath = "";
 		try {
 			if (System.getProperty("erd16.appdata.basedir") == null) {
-				basepath = System.getProperty("user.home") + "/.erd16/";
+				addDatapath = System.getProperty("user.home") + "/.erd16/";
 			} else {
-				basepath = System.getProperty("erd16.appdata.basedir");
+				addDatapath = System.getProperty("erd16.appdata.basedir");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		//set path variables and create directories
-		tdb_path = basepath + "tdb/";
-		ttl_path = basepath + "ttl/";
-		messages_path = basepath + "messages/";
-		backup_path = basepath + "backup/";
+		tdb_path = addDatapath + "tdb/";
+		ttl_path = addDatapath + "ttl/";
+		messages_path = addDatapath + "messages/";
+		backup_path = addDatapath + "backup/";
 		for (String path: ImmutableList.of(tdb_path, ttl_path, messages_path, backup_path)) {
 			File dir = new File(path);
-			if (!dir.exists()) {
-				dir.mkdirs();
+			if (!dir.isDirectory()) {
+				if(!dir.mkdirs()) {
+					System.err.println("[ERROR] unable to create " + dir);
+				}
 			}
 		}
 
+
 		//copy ontology source files to application data directory
-		String json = "";
+		Map<String, String> map = null;
+
 		try {
-			json = Files.toString(new File(basepath + "ont-sources.json"), java.nio.charset.StandardCharsets.UTF_8);
-		} catch (Exception e) {
-			e.printStackTrace();
-			json_found = false;
-			json = "{\n" +
-  			"\t\"http://mmoon.org/core/\": \"http://mmoon.org/core.ttl\",\n" +
-  			"\t\"http://mmoon.org/deu/schema/og/\": \"http://mmoon.org/deu/schema/og.ttl\",\n" +
-  			"\t\"http://mmoon.org/deu/inventory/og/\": \"http://mmoon.org/deu/inventory/og.ttl\"\n" +
-				"}";
-			File file = new File(basepath + "ont-sources.json");
+			readOntologyLocationMap();
+
+		} catch (IOException ioe) {
+			System.err.println("[WARN] unable to find or open ontology location spec (ont-sources.json) " +
+					"- (re-)creating spec file with default settings");
+			//todo: use Gson to write the defaultLocations() map instead of specifying it as string literal
+			String json = "{\n" +
+					"\t\"http://mmoon.org/core/\": \"http://mmoon.org/core.ttl\",\n" +
+					"\t\"http://mmoon.org/deu/schema/og/\": \"http://mmoon.org/deu/schema/og.ttl\",\n" +
+					"\t\"http://mmoon.org/deu/inventory/og/\": \"http://mmoon.org/deu/inventory/og.ttl\"\n" +
+					"}";
+
 			try {
-				Files.write(json, file, java.nio.charset.StandardCharsets.UTF_8);
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
+				Files.write(json, ontLocationJson(), java.nio.charset.StandardCharsets.UTF_8);
+			} catch (IOException ioeForWrite) {
+				ont_sources = defaultLocations();
+				System.err.println(new RuntimeException("Unable to write default JSON (continue with defaults)", ioeForWrite));
 			}
+
+			try {
+				readOntologyLocationMap();
+			} catch (Exception ex) {
+				ont_sources = defaultLocations();
+				System.err.println(new RuntimeException("Unable to initialize ont location with default JSON", ex));
+			}
+		} catch (JsonSyntaxException jse) {
+			System.err.println("[ERROR] open ontology location spec (ont-sources.json) is invalid JSON:\n" +
+					jse.getMessage() + "\n - continuing with defaults");
+			ont_sources = defaultLocations();
 		}
-		Gson gson = new Gson();
-		ont_sources = gson.fromJson(json, new TypeToken<Map<String, String>>(){}.getType());
+
 		for (Map.Entry<String, String> entry : ont_sources.entrySet()) {
 			try {
 				URL url = new URL(entry.getValue());
-				String new_value = basepath + "ttl" + url.getPath();
+				String new_value = addDatapath + "ttl" + url.getPath();
 				File dest = new File(new_value);
 				if (!dest.exists()) {
 					new File(dest.getParent()).mkdirs();
@@ -126,6 +143,7 @@ public class Configuration extends IniWebEnvironment {
 				e.printStackTrace();
 			}
 		}
+
 		//System.out.println(ont_sources);
 		//initialize TDB if necessary
 		new Thread(new Runnable() {
@@ -154,7 +172,7 @@ public class Configuration extends IniWebEnvironment {
 
 		//copy default shiro.ini file to application data directory and load
 		String cat_base = System.getProperty("catalina.base") + "/";
-		File dest = new File(basepath + "shiro/shiro.ini");
+		File dest = new File(addDatapath + "shiro/shiro.ini");
 		if (!dest.exists()) {
 			new File(dest.getParent()).mkdirs();
 			try {
@@ -165,7 +183,29 @@ public class Configuration extends IniWebEnvironment {
 			}
 		}
 		Ini ini = new Ini();
-		ini.loadFromPath(basepath + "shiro/shiro.ini");
+		ini.loadFromPath(addDatapath + "shiro/shiro.ini");
 		this.setIni(ini);
+	}
+
+	private void readOntologyLocationMap() throws IOException, JsonSyntaxException {
+
+		String json = Files.asCharSource(ontLocationJson(), Charsets.UTF_8).read();
+
+		Gson gson = new Gson();
+
+		ont_sources = gson.fromJson(json, new TypeToken<Map<String, String>>(){}.getType());
+	}
+
+	private Map<String, String> defaultLocations() {
+
+		return ImmutableMap.of(
+				"http://mmoon.org/core/", "http://mmoon.org/core.ttl",
+				"http://mmoon.org/deu/schema/og/", "http://mmoon.org/deu/schema/og.ttl",
+				"http://mmoon.org/deu/inventory/og/", "http://mmoon.org/deu/inventory/og.ttl"
+		);
+	}
+
+	protected final File ontLocationJson() {
+		return new File(addDatapath + "ont-sources.json");
 	}
 }
