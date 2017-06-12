@@ -49,10 +49,10 @@ public class QueryDBSPARQL {
                         "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
                         "prefix gold: <http://purl.org/linguistics/gold/>\n" +
                         "prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-                        "prefix mmoon: <http://mmoon.org/mmoon/>\n" +
-                        "prefix deu_schema: <http://mmoon.org/lang/deu/schema/og/>\n" +
-                        "prefix deu_inventory: <http://mmoon.org/lang/deu/inventory/og/>\n" +
-                        "base <http://mmoon.org/lang/deu/inventory/og/>\n" +
+                        "prefix mmoon: <http://mmoon.org/core/>\n" +
+                        "prefix deu_schema: <http://mmoon.org/deu/schema/og/>\n" +
+                        "prefix deu_inventory: <http://mmoon.org/deu/inventory/og/>\n" +
+                        "base <http://mmoon.org/deu/inventory/og/>\n" +
                         "\n";
 
         /**
@@ -416,7 +416,7 @@ public class QueryDBSPARQL {
                 QueryDBSPARQL.QUERY_PREFIX //Sets prefix which was declared above
                 + "SELECT DISTINCT ?property ?object\n" // Selects final result values
                 + "WHERE {\n"
-                +       searchObjectIRI + "?property ?object .\n"
+                +       searchObjectIRI + " ?property ?object .\n"
                 +       "FILTER NOT EXISTS {\n"
                 +               "?subproperty rdfs:subPropertyOf* ?property .\n"
                 +               "FILTER (?subproperty != ?property)\n"
