@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteSource;
 import com.google.common.io.CharSource;
 import com.google.common.io.Resources;
 import com.google.common.io.Files;
@@ -171,13 +172,12 @@ public class Configuration extends IniWebEnvironment {
 		}, 60000, backup_interval);
 
 		//copy default shiro.ini file to application data directory and load
-		String cat_base = System.getProperty("catalina.base") + "/";
 		File dest = new File(addDatapath + "shiro/shiro.ini");
 		if (!dest.exists()) {
 			new File(dest.getParent()).mkdirs();
 			try {
-				Files.asByteSource(new File(cat_base + "webapps/erd16-0.1/WEB-INF/classes/shiro/shiro.ini"))
-					.copyTo(Files.asByteSink(dest));
+				URL shiroConfigURL = Resources.getResource("shiro/shiro.ini");
+				Resources.asByteSource(shiroConfigURL).copyTo(Files.asByteSink(dest));
 			} catch (IOException e) {
 					e.printStackTrace();
 			}
