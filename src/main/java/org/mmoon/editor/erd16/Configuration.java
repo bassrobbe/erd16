@@ -94,7 +94,6 @@ public class Configuration extends IniWebEnvironment {
 			}
 		}
 
-
 		//copy ontology source files to application data directory
 		Map<String, String> map = null;
 
@@ -104,15 +103,11 @@ public class Configuration extends IniWebEnvironment {
 		} catch (IOException ioe) {
 			System.err.println("[WARN] unable to find or open ontology location spec (ont-sources.json) " +
 					"- (re-)creating spec file with default settings");
-			//todo: use Gson to write the defaultLocations() map instead of specifying it as string literal
-			String json = "{\n" +
-					"\t\"http://mmoon.org/core/\": \"http://mmoon.org/core.ttl\",\n" +
-					"\t\"http://mmoon.org/deu/schema/og/\": \"http://mmoon.org/deu/schema/og.ttl\",\n" +
-					"\t\"http://mmoon.org/deu/inventory/og/\": \"http://mmoon.org/deu/inventory/og.ttl\"\n" +
-					"}";
+			Gson gson = new Gson();
+			String json = gson.toJson(defaultLocations());
 
 			try {
-				Files.write(json, ontLocationJson(), java.nio.charset.StandardCharsets.UTF_8);
+				Files.write(json, ontLocationJson(), Charsets.UTF_8);
 			} catch (IOException ioeForWrite) {
 				ont_sources = defaultLocations();
 				System.err.println(new RuntimeException("Unable to write default JSON (continue with defaults)", ioeForWrite));
@@ -145,7 +140,6 @@ public class Configuration extends IniWebEnvironment {
 			}
 		}
 
-		//System.out.println(ont_sources);
 		//initialize TDB if necessary
 		new Thread(new Runnable() {
 			@Override
